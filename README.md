@@ -17,7 +17,9 @@
   <a href="README.en.md">English</a> ·
   <a href="docs/功能与视觉系统文档.md">功能文档</a> ·
   <a href="docs/AI-API-说明文档.md">AI 文档</a> ·
-  <a href="docs/项目说明文档.md">项目说明</a>
+  <a href="docs/项目说明文档.md">项目说明</a> ·
+  <a href="docs/DEPLOYMENT.md">部署</a> ·
+  <a href="docs/RELEASE.md">发布</a>
 </p>
 
 ---
@@ -159,6 +161,25 @@ npm run worker
 ```
 
 开发模式下 Next.js 支持热更新。生产环境建议先 `npm run build` 再 `npm run start`。
+
+### Docker 生产部署
+
+项目包含可复用的 Docker 生产基线：
+
+```bash
+cp .env.production.example .env.production
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+当前公开部署地址：
+
+- 公网入口：`https://dream.vectorcontrol.tech`
+- 链路：Cloudflare -> hk1 nginx -> gz1 Tailnet `100.89.231.43:3001`
+
+详细操作、验证和发布规范见：
+
+- [部署 Runbook](docs/DEPLOYMENT.md)
+- [发布流程](docs/RELEASE.md)
 
 ### Windows 一键启动
 

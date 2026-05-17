@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dreamspirit
+      POSTGRES_USER: dreamspirit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dreamspirit -d dreamspirit"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+    image: dreamspirit-web:local
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - path: .env.production
+        required: false
+    environment:
+      DATABASE_URL: postgresql://dreamspirit:${POSTGRES_PASSWORD}@postgres:5432/dreamspirit?schema=public
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "${APP_BIND_HOST:-127.0.0.1}:${APP_PORT:-3000}:3000"
+    volumes:
+      - ./data/uploads:/app/public/uploads
+    command: sh -c "${PRISMA_DEPLOY_COMMAND:-npx prisma db push} && npm run start"
+
+  worker:
+    build:
+      context: .
+    image: dreamspirit-web:local
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - path: .env.production
+        required: false
+    environment:
+      DATABASE_URL: postgresql://dreamspirit:${POSTGRES_PASSWORD}@postgres:5432/dreamspirit?schema=public
+    volumes:
+      - ./data/uploads:/app/public/uploads
+    command: sh -c "${PRISMA_DEPLOY_COMMAND:-npx prisma db push} && npm run worker"
