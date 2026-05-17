@@ -21,10 +21,6 @@ export function SignInForm({ callbackUrl = "/app", demoMode = false }: { callbac
   const [resetPassword, setResetPassword] = useState("");
   const [resetMessage, setResetMessage] = useState<string | null>(null);
   const [codeCooldown, setCodeCooldown] = useState(0);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [helpDoc, setHelpDoc] = useState("");
-  const [helpLoading, setHelpLoading] = useState(false);
-  const [helpError, setHelpError] = useState<string | null>(null);
 
   useEffect(() => {
     function fillExperienceAccount() {
@@ -45,29 +41,6 @@ export function SignInForm({ callbackUrl = "/app", demoMode = false }: { callbac
     const timer = window.setTimeout(() => setCodeCooldown((seconds) => seconds - 1), 1000);
     return () => window.clearTimeout(timer);
   }, [codeCooldown]);
-
-  async function openHelpDoc() {
-    setHelpOpen(true);
-
-    if (helpDoc || helpLoading) {
-      return;
-    }
-
-    setHelpLoading(true);
-    setHelpError(null);
-
-    try {
-      const response = await fetch("/api/help-doc");
-      if (!response.ok) {
-        throw new Error("help doc request failed");
-      }
-      setHelpDoc(await response.text());
-    } catch {
-      setHelpError("暂时无法读取帮助文档，请稍后再试。");
-    } finally {
-      setHelpLoading(false);
-    }
-  }
 
   function sendResetCode() {
     if (!resetEmail.trim()) {
@@ -157,9 +130,9 @@ export function SignInForm({ callbackUrl = "/app", demoMode = false }: { callbac
 
       <p className="auth-help-copy">
         遇到问题了？查看
-        <button className="auth-help-link" type="button" onClick={openHelpDoc}>
+        <a className="auth-help-link" href="https://github.com/Xavier-Trump/DreamSpirit" target="_blank" rel="noreferrer">
           帮助
-        </button>
+        </a>
       </p>
 
       {resetOpen ? (
@@ -220,36 +193,6 @@ export function SignInForm({ callbackUrl = "/app", demoMode = false }: { callbac
                 重置密码
               </button>
             </div>
-          </div>
-        </div>
-      ) : null}
-
-      {helpOpen ? (
-        <div className="auth-modal-backdrop" role="presentation" onMouseDown={() => setHelpOpen(false)}>
-          <div
-            className="auth-modal auth-help-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="help-doc-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="auth-modal-header">
-              <div>
-                <div className="brand-mark">
-                  <span className="brand-orb" />
-                  DreamSpirit
-                </div>
-                <h2 className="panel-title" id="help-doc-title">
-                  项目帮助文档
-                </h2>
-              </div>
-              <button className="auth-modal-close" type="button" aria-label="关闭" onClick={() => setHelpOpen(false)}>
-                ×
-              </button>
-            </div>
-            {helpLoading ? <div className="notice">正在读取帮助文档...</div> : null}
-            {helpError ? <div className="notice danger-zone">{helpError}</div> : null}
-            {helpDoc ? <pre className="auth-help-doc">{helpDoc}</pre> : null}
           </div>
         </div>
       ) : null}

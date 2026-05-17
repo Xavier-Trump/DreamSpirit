@@ -24,7 +24,7 @@
 
 ## What is DreamSpirit
 
-Dreams fade fast after waking up. DreamSpirit helps you capture those fragments before they vanish. Type or speak your dream, then let AI handle the rest — symbol decoding, emotion analysis, story generation, even visual imagery. Over time, element graphs and insight reports reveal the recurring patterns woven across your dream life.
+After waking up, memories of dreams fade especially quickly — and DreamSpirit helps you settle those scattered fragments before they vanish. Type or speak your dream, then let AI handle the rest: symbol decoding, emotion analysis, story generation, even visual imagery. Over time, element graphs and insight reports reveal the recurring patterns woven across your dream life.
 
 What started as a simple recording tool is now a full-stack **Next.js application**: account system, persistent database, async job queue, per-user AI configuration, browser-based voice dictation, element relationship graphs, thematic insights, anonymous share moderation, collective universe stories, plus Markdown export and PDF printing — all in one locally runnable package.
 
