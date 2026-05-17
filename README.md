@@ -24,7 +24,7 @@
 
 ## 什么是 DreamSpirit
 
-人醒来之后梦境消散得很快——而 DreamSpirit 则可以帮你把零散的记忆片段沉淀下来。用文字或语音快速记录，剩下的交给 AI：解析符号、分析情绪、生成故事与画面，长期累积后在元素图谱和洞察报告中发现自己反复出现的梦境模式。
+醒来之后梦境消散得很快——DreamSpirit 帮你把零散的记忆片段沉淀下来。用文字或语音快速记录，剩下的交给 AI：解析符号、分析情绪、生成故事与画面，长期累积后在元素图谱和洞察报告中发现自己反复出现的梦境模式。
 
 当前实现已经从一个简单的记录工具成长为 **Next.js 全栈应用**：账号系统、数据库持久化、异步任务队列、用户级 AI 配置、浏览器语音听写、元素关系图谱、主题洞察、匿名共享审核、梦境宇宙故事串联、以及 Markdown 导出和 PDF 打印，全部在一个本地可运行的项目包里。
 
@@ -42,7 +42,7 @@ npm run dev
 ### 登陆界面
 
 <p align="center">
-  <img src="docs/images/signin.png" alt="梦境总览页面" width="820">
+  <img src="docs/images/signin.png" alt="登陆界面" width="820">
 </p>
 
 ### 梦境总览
@@ -72,7 +72,7 @@ npm run dev
 ### 洞察报告
 
 <p align="center">
-    <img src="docs/images/insights-report.png" alt="洞察报告页面" width="820">
+  <img src="docs/images/insights-report.png" alt="洞察报告页面" width="820">
 </p>
 
 ### 共享梦境社区
