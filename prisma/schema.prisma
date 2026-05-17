@@ -1,0 +1,345 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum DreamStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  DELETED
+}
+
+enum AssetType {
+  IMAGE
+  AUDIO
+}
+
+enum AssetStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum AnalysisStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum JobType {
+  TRANSCRIBE
+  ANALYZE_DREAM
+  GENERATE_STORY
+  GENERATE_IMAGE
+  MODERATE_SHARE
+  GENERATE_UNIVERSE
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum ModerationDecision {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SharedDreamStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum UniverseStoryStatus {
+  DRAFT
+  READY
+  FAILED
+}
+
+enum AuditAction {
+  DREAM_CREATED
+  DREAM_UPDATED
+  DREAM_DELETED
+  DREAM_ARCHIVED
+  DREAM_SHARED
+  SHARE_WITHDRAWN
+  JOB_ENQUEUED
+  JOB_COMPLETED
+  JOB_FAILED
+  ACCOUNT_DELETED
+}
+
+model User {
+  id               String      @id @default(cuid())
+  name             String?
+  email            String      @unique
+  emailVerified    DateTime?
+  passwordHash     String?
+  image            String?
+  role             UserRole    @default(USER)
+  anonymousProfile String      @default("moonwalker")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  accounts         Account[]
+  sessions         Session[]
+  dreams           Dream[]
+  jobs             Job[]
+  auditLogs        AuditLog[]
+  aiConfig         UserAiConfig?
+  emotionOptions   UserEmotionOption[]
+  themeRules       UserThemeRule[]
+}
+
+model UserAiConfig {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  provider            String   @default("doubao")
+  apiKey              String?  @db.Text
+  chatModel           String
+  imageModel          String
+  chatEndpoint        String
+  imageEndpoint       String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserEmotionOption {
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  sortOrder Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, label])
+  @@index([userId, sortOrder])
+}
+
+model UserThemeRule {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  label     String
+  keywords  String[]
+  sortOrder Int      @default(0)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId, sortOrder])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Dream {
+  id                String           @id @default(cuid())
+  userId            String
+  title             String
+  contentRich       Json
+  contentPlain      String           @db.Text
+  dreamedAt         DateTime
+  emotions          String[]
+  clarity           Int
+  isRecurring       Boolean          @default(false)
+  realityConnection String?          @db.Text
+  status            DreamStatus      @default(DRAFT)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analysis          DreamAnalysis?
+  story             DreamStory?
+  assets            DreamAsset[]
+  elements          DreamElement[]
+  sharedDream       SharedDream?
+  jobs              Job[]
+  moderationReviews ModerationReview[]
+
+  @@index([userId, dreamedAt])
+}
+
+model DreamAnalysis {
+  id              String         @id @default(cuid())
+  dreamId         String         @unique
+  symbolism       String         @db.Text
+  emotionAnalysis String         @db.Text
+  stressFactors   String[]
+  themes          String[]
+  patternSignals  String[]
+  provider        String
+  version         String
+  status          AnalysisStatus @default(PENDING)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  dream           Dream          @relation(fields: [dreamId], references: [id], onDelete: Cascade)
+}
+
+model DreamStory {
+  id        String   @id @default(cuid())
+  dreamId    String   @unique
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  dream     Dream    @relation(fields: [dreamId], references: [id], onDelete: Cascade)
+}
+
+model DreamAsset {
+  id         String      @id @default(cuid())
+  dreamId    String
+  type       AssetType
+  url        String
+  mimeType   String
+  status     AssetStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  dream      Dream       @relation(fields: [dreamId], references: [id], onDelete: Cascade)
+}
+
+model DreamElement {
+  id        String   @id @default(cuid())
+  dreamId    String
+  type      String
+  value     String
+  normalized String
+  count     Int      @default(1)
+  createdAt DateTime @default(now())
+  dream     Dream     @relation(fields: [dreamId], references: [id], onDelete: Cascade)
+
+  @@index([dreamId, type])
+  @@index([normalized])
+}
+
+model SharedDream {
+  id                String            @id @default(cuid())
+  sourceDreamId     String            @unique
+  anonymousProfileId String
+  title             String
+  excerpt           String            @db.Text
+  contentPublic     String            @db.Text
+  emotions          String[]
+  themes            String[]
+  moderationStatus  SharedDreamStatus @default(PENDING)
+  publishedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  sourceDream       Dream             @relation(fields: [sourceDreamId], references: [id], onDelete: Cascade)
+  universeLinks     UniverseStorySource[]
+  moderationReviews ModerationReview[]
+}
+
+model UniverseStory {
+  id          String               @id @default(cuid())
+  story       String               @db.Text
+  status      UniverseStoryStatus  @default(DRAFT)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  generatedAt DateTime?
+  sources     UniverseStorySource[]
+}
+
+model UniverseStorySource {
+  universeStoryId String
+  sharedDreamId   String
+  orderIndex      Int
+  universeStory   UniverseStory @relation(fields: [universeStoryId], references: [id], onDelete: Cascade)
+  sharedDream     SharedDream   @relation(fields: [sharedDreamId], references: [id], onDelete: Cascade)
+
+  @@id([universeStoryId, sharedDreamId])
+}
+
+model ModerationReview {
+  id         String             @id @default(cuid())
+  dreamId     String?
+  sharedDreamId String?
+  riskFlags  String[]
+  decision   ModerationDecision @default(PENDING)
+  notes      String?            @db.Text
+  reviewedAt DateTime?
+  createdAt  DateTime           @default(now())
+  dream      Dream?             @relation(fields: [dreamId], references: [id], onDelete: Cascade)
+  sharedDream SharedDream?      @relation(fields: [sharedDreamId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  userId      String?
+  dreamId     String?
+  type        JobType
+  status      JobStatus @default(QUEUED)
+  payload     Json
+  output      Json?
+  error       String?   @db.Text
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  runAfter    DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  dream       Dream?    @relation(fields: [dreamId], references: [id], onDelete: SetNull)
+
+  @@index([status, runAfter])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  userId     String?
+  action     AuditAction
+  targetType String
+  targetId   String
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
