@@ -1,370 +1,473 @@
-# DreamSpirit 梦灵
+<h1 align="center">DreamSpirit · 梦灵</h1>
 
-DreamSpirit 是一个 AI 梦境记录、解析、可视化与匿名共享 Web 应用。它从“醒来后快速记下梦境”出发，把文字记录、浏览器语音听写、AI 解析、梦境图片、元素图谱、主题洞察、共享梦境宇宙和导出报告整合到一个本地可运行的完整产品里。
+<p align="center">
+  <b>AI 梦境记录、深度解析与匿名共享平台</b>
+</p>
 
-当前仓库以**本地运行**为主要使用方式，不要求部署 Vercel、Neon 或 Supabase。数据默认保存在本机 PostgreSQL 中，AI Key 可以在设置页按账号保存，也可以通过 `.env.local` 作为兜底配置。
+<p align="center">
+  <img alt="Next.js 15" src="https://img.shields.io/badge/Next.js-15-000000?style=flat-square&logo=next.js&logoColor=white">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.6-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-5.17-2D3748?style=flat-square&logo=prisma&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white">
+  <img alt="License" src="https://img.shields.io/badge/License-MIT-blue?style=flat-square">
+</p>
 
-## 项目定位
+<p align="center">
+  <a href="README.en.md">English</a> ·
+  <a href="docs/功能与视觉系统文档.md">功能文档</a> ·
+  <a href="docs/AI-API-说明文档.md">AI 文档</a> ·
+  <a href="docs/项目说明文档.md">项目说明</a>
+</p>
 
-题目计划书要求的是“AI 梦境记录与解析器”：支持文字/语音记录、AI 梦境解析、图片生成、时间轴浏览，并在进阶挑战中扩展梦境元素图谱、主题分析、匿名共享宇宙和梦境日记导出。
+---
 
-当前实现已经覆盖基础要求和主要进阶项，并额外加入：
+## 什么是 DreamSpirit
 
-- 账号注册 / 登录 / 注销
-- PostgreSQL + Prisma 持久化存储
-- 数据库驱动的异步 Job Queue + Worker
-- 用户级 AI API 配置
-- 可编辑情绪标签与主题规则
-- 匿名共享前的本地规则审核和隐私脱敏
-- 体验账号、seed 数据和 Windows 一键启动脚本
-- Markdown 导出与浏览器打印 PDF 报告
+人醒来之后梦境消散得很快——而 DreamSpirit 则可以帮你把零散的记忆片段沉淀下来。用文字或语音快速记录，剩下的交给 AI：解析符号、分析情绪、生成故事与画面，长期累积后在元素图谱和洞察报告中发现自己反复出现的梦境模式。
 
-## 功能完成度
+当前实现已经从一个简单的记录工具成长为 **Next.js 全栈应用**：账号系统、数据库持久化、异步任务队列、用户级 AI 配置、浏览器语音听写、元素关系图谱、主题洞察、匿名共享审核、梦境宇宙故事串联、以及 Markdown 导出和 PDF 打印，全部在一个本地可运行的项目包里。
 
-| 计划书要求 | 当前实现 |
-| --- | --- |
-| 文字输入记录梦境 | TipTap 富文本编辑器，保存富文本 JSON 与纯文本内容 |
-| 语音输入 | 浏览器 Web Speech API 实时听写，支持中文普通话、粤语、英文 |
-| 基本信息记录 | 梦境时间、情绪标签、清晰度、重复梦境、现实关联、草稿/活跃/归档状态 |
-| AI 多维解析 | 象征解读、情绪分析、压力源、主题标签、模式信号 |
-| 创意故事生成 | 单条梦境可生成短篇故事或诗性散文，并持久化保存 |
-| 梦境图片生成 | 调用图片模型生成代表性图片，保存为 DreamAsset |
-| 时间轴浏览 | 支持按日期范围、情绪、清晰度筛选 |
-| 元素图谱 | AI 提取人物、地点、物品、动作，前端以 SVG 关系图展示共现关系 |
-| 主题分析 | 洞察报告统计高频主题、情绪分布、常见主题对比、压力模式 |
-| 匿名共享 | 提交共享前执行本地规则审核、隐私脱敏，通过后进入共享池 |
-| 梦境宇宙 | 从 3-5 条公开梦境生成公共梦境宇宙故事 |
-| 导出 | 全量 Markdown 导出，打印页可由浏览器保存为 PDF |
+```bash
+git clone https://github.com/Xavier-Trump/DreamSpirit.git && cd DreamSpirit
+npm install && docker compose up -d
+npx prisma db push && npm run prisma:seed
+npm run dev
+```
 
-## 技术架构
+> 浏览器打开 `http://localhost:3000`，体验账号：`dreamer@dreamspirit.local` / `dreamspirit123`
 
-| 层级 | 技术 / 模块 |
-| --- | --- |
-| 前端 | Next.js App Router、React、TypeScript、lucide-react、TipTap |
-| 样式 | 全局 CSS 变量、深色玻璃拟态面板、响应式网格、打印样式 |
-| 认证 | Auth.js Credentials，自定义注册接口，bcryptjs 密码哈希 |
-| 数据 | PostgreSQL、Prisma、关系模型与 seed 数据 |
-| AI | 服务端统一 Provider，默认兼容豆包聊天与图片接口 |
-| 异步任务 | `Job` 表 + `worker/run-jobs.ts` 轮询处理 |
-| 存储 | 默认本地文件存储，图片 base64 回落保存到 `public/uploads` |
-| 安全 | API Key 不在前端明文暴露，共享内容本地审核与脱敏 |
+## 页面预览
 
-## 核心模块
+### 登陆界面
 
-### 梦境工作台
+<p align="center">
+  <img src="docs/images/signin.png" alt="梦境总览页面" width="820">
+</p>
 
-`/app` 展示总览数据、最近梦境、总记录数、已分析数和重复梦境数。每条梦境卡片可进入详情页继续编辑、分析或导出。
+### 梦境总览
 
-### 记录与编辑
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="梦境总览页面" width="820">
+</p>
 
-`/dreams/new` 和 `/dreams/[id]` 复用 `DreamForm`：
+### 梦境记录与语音听写
 
-- 标题、发生时间、富文本梦境内容
-- 浏览器语音听写插入正文
-- 多选情绪标签和临时自定义标签
-- 清晰度 1-5 星
-- 重复梦境标记
-- 现实关联记录
-- 草稿保存与正式保存
-- 编辑页 15 秒自动保存草稿
+<p align="center">
+  <img src="docs/images/new-dream.png" alt="新建梦境页面" width="820">
+</p>
 
-### AI 解析与创意输出
+### 梦境时间轴
 
-梦境详情页提供：
-
-- 解析梦境
-- 生成故事
-- 生成图片
-- 提交匿名共享
-- 导出 Markdown
-- 打印 / 保存 PDF
-
-解析、故事和图片都通过任务队列处理。前端只拿到 `jobId`，然后轮询 `/api/jobs/:id` 等待任务完成。
-
-### 时间轴
-
-`/timeline` 按日期分组展示梦境，支持：
-
-- 开始日期 / 结束日期筛选
-- 情绪筛选
-- 清晰度筛选
-- 点击记录进入详情页
+<p align="center">
+  <img src="docs/images/dream-detail.png" alt="梦境时间轴页面" width="820">
+</p>
 
 ### 元素图谱
 
-`/elements` 使用已解析梦境中的 `DreamElement` 数据构建图谱：
-
-- 节点代表元素，大小与出现次数相关
-- 连线代表同一梦境中的共现关系
-- 侧栏显示当前元素、类型、出现次数和关联元素
+<p align="center">
+  <img src="docs/images/elements-graph.png" alt="梦境元素图谱页面" width="820">
+</p>
 
 ### 洞察报告
 
-`/insights` 聚合活跃与归档梦境：
-
-- 总记录、重复梦境、现实关联数量
-- 高频主题
-- 情绪分布
-- 用户自定义主题规则对比
-- 压力模式摘要
-- 记录建议
+<p align="center">
+    <img src="docs/images/insights-report.png" alt="洞察报告页面" width="820">
+</p>
 
 ### 共享梦境社区
 
-`/community` 展示审核通过的匿名梦境。用户可以从共享池中选择 3-5 条梦境，生成公共“梦境宇宙”故事。
-
-共享流程会先做本地规则审核：
-
-- 自动隐藏邮箱、手机号、身份证号、链接、QQ、微信号、长数字等个人信息
-- 命中违法、严重暴力、隐私泄露、引流等规则时拒绝或标记复核
-- 只有审核通过的内容会进入公开共享池
+<p align="center">
+  <img src="docs/images/community.png" alt="共享梦境社区页面" width="820">
+</p>
 
 ### 设置中心
 
-`/settings` 包含：
+<p align="center">
+  <img src="docs/images/settings.png" alt="设置中心页面" width="820">
+</p>
 
-- 账号摘要与注销
-- 本机离线 / 联网访问模式说明
-- Markdown 下载与打印 PDF
-- 用户级 AI API 配置
-- 情绪标签与主题规则配置
+## 功能一览
 
-## 目录结构
+### 记录
 
-```text
-app/                Next.js 页面与 API 路由
-components/         UI 组件、表单、图谱、语音听写与交互动作
-docs/               项目说明、AI 接入、功能与视觉系统文档
-lib/                认证、Prisma、AI、任务、洞察、共享审核等服务层
-prisma/             Prisma schema 与 seed 数据
-public/brand/       品牌与背景图片素材
-types/              类型增强
-worker/             后台任务处理入口
-```
+| 功能 | 详情 |
+|---|---|
+| 富文本编辑 | TipTap 编辑器，支持格式化、列表、段落 |
+| 语音听写 | 浏览器 Web Speech API，支持中文普通话、粤语、英文，不依赖后端 AI Key |
+| 结构化字段 | 梦境时间、情绪标签（可多选 + 临时自定义）、清晰度 1-5 星、重复梦境标记、现实关联记录 |
+| 草稿保护 | 编辑页面每 15 秒自动保存草稿，不怕浏览器崩溃 |
 
-## 本地运行
+### AI 解析
 
-### 1. 安装依赖
+| 能力 | 说明 |
+|---|---|
+| 象征解读 | 解读梦境的象征意义和隐含信息 |
+| 情绪分析 | 识别梦境中的情绪状态和情绪来源 |
+| 压力源识别 | 提取潜在压力因素 |
+| 主题标签 | 自动生成主题标签，辅助后续检索和洞察 |
+| 模式信号 | 标记重复出现的梦境模式 |
+| 元素提取 | 提取人物、地点、物品、动作四类元素，写入图谱数据库 |
+
+### 创意产出
+
+| 类型 | 说明 |
+|---|---|
+| 故事生成 | 为单条梦境生成 300-500 字短篇故事或诗性散文 |
+| 图片生成 | 调用图片模型生成梦境代表画面，支持 base64 本地回落存储 |
+
+### 观察与分析
+
+| 模块 | 说明 |
+|---|---|
+| 时间轴 | 按日期分组浏览，支持日期范围、情绪、清晰度组合筛选 |
+| 元素图谱 | SVG 交互式关系图：节点大小 = 出现频次，连线粗细 = 共现次数，支持悬停、点击、键盘选择 |
+| 洞察报告 | 高频主题排行、情绪分布、常见主题对比（用户可自定规则）、压力模式摘要、记录建议 |
+
+### 社区 & 共享
+
+| 功能 | 说明 |
+|---|---|
+| 匿名共享 | 提交单条梦境进入共享池前，先执行本地规则审核 |
+| 隐私脱敏 | 自动隐藏邮箱、手机号、身份证号、链接、QQ/微信号等 |
+| 内容审核 | 违法/暴力/隐私泄露/引流等内容拒绝或标记复核 |
+| 梦境宇宙 | 从共享池选取 3-5 条公开梦境，AI 生成 1800-2500 字连贯公共故事 |
+
+### 导出 & 设置
+
+| 功能 | 说明 |
+|---|---|
+| Markdown 导出 | 全量梦境日记下载为 Markdown 文件 |
+| 打印 PDF | 专用打印报告页面，浏览器直接保存为 PDF |
+| AI 配置 | 用户级独立配置 Provider / Key / 模型 / Endpoint，不暴露在前端 |
+| 偏好管理 | 情绪标签和主题规则均可用户自定义增删 |
+
+## 安装与运行
+
+### 前置条件
+
+- **Node.js** ≥ 18
+- **Docker Desktop**（推荐）或本地安装 PostgreSQL 17+
+- 2 GB 以上空闲磁盘空间（含依赖和种子数据）
+
+### 1. 克隆仓库
 
 ```bash
+git clone https://github.com/Xavier-Trump/DreamSpirit.git
+cd DreamSpirit
 npm install
 ```
 
-### 2. 准备环境变量
+### 2. 配置环境变量
 
-复制 `.env.example` 为 `.env.local`。默认本地配置示例：
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dreamspirit?schema=public"
-AUTH_SECRET="replace-with-a-long-random-secret"
-AUTH_URL="http://localhost:3000"
-DEMO_MODE="false"
-DEMO_USER_EMAIL="dreamer@dreamspirit.local"
-
-AI_PROVIDER="doubao"
-DOUBAO_API_KEY=""
-DOUBAO_CHAT_MODEL="ep-20260130043458-8fvmf"
-DOUBAO_IMAGE_MODEL="doubao-seedream-4-5-251128"
-DOUBAO_ENDPOINT="https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-DOUBAO_IMAGE_ENDPOINT="https://ark.cn-beijing.volces.com/api/v3/images/generations"
-
-STORAGE_MODE="local"
-LOCAL_UPLOAD_DIR="./tmp/uploads"
+```bash
+cp .env.example .env.local
 ```
 
-说明：
+编辑 `.env.local`，核心变量如下：
 
-- `DATABASE_URL` 指向本地 PostgreSQL。
-- `AUTH_SECRET` 本地开发可先使用示例值，公开访问前必须换成随机长密钥。
-- `DEMO_MODE=false` 表示正常本地开发，可以注册、编辑、删除和触发任务。
-- `DOUBAO_API_KEY` 可以留空；进入应用后也可以在“设置”页填写 API Key、模型名和 Endpoint。
-- 用户设置页保存的 AI 配置优先级高于环境变量。
+| 变量 | 必须 | 说明 |
+|---|---|---|
+| `DATABASE_URL` | 是 | PostgreSQL 连接字符串，本地 Docker 无需改动 |
+| `AUTH_SECRET` | 是 | 认证加密密钥，本地开发可用示例值 |
+| `AUTH_URL` | 是 | 本地运行时填入 `http://localhost:3000` |
+| `DOUBAO_API_KEY` | 否 | 可留空，运行后在设置页填写 |
+| `DOUBAO_CHAT_MODEL` | 否 | 聊天/解析模型 ID |
+| `DOUBAO_IMAGE_MODEL` | 否 | 图片生成模型 ID |
+| `DOUBAO_ENDPOINT` | 否 | 聊天接口地址 |
+| `DOUBAO_IMAGE_ENDPOINT` | 否 | 图片接口地址 |
+| `STORAGE_MODE` | 否 | `local` 本地存储（默认），可选 `s3` |
+| `DEMO_MODE` | 否 | `false` 允许正常注册和写入 |
 
-### 3. 启动 PostgreSQL
+> **优先级：** 用户设置页保存的 AI 配置 > `.env.local` 环境变量。多用户环境下每个人可使用自己的 Key。
 
-推荐使用 Docker：
+### 3. 启动数据库
 
 ```bash
 docker compose up -d
 ```
 
-如果不用 Docker，也可以自行安装 PostgreSQL，并保证 `.env.local` 的 `DATABASE_URL` 指向可用数据库。
+如果不用 Docker，请自行安装 PostgreSQL 并确保 `DATABASE_URL` 指向可用数据库。
 
 ### 4. 初始化数据库
 
 ```bash
-npx prisma db push
-npm run prisma:seed
+npx prisma db push         # 同步数据库结构
+npm run prisma:seed         # 导入体验数据
 ```
 
-Seed 会创建：
+种子数据包含：体验账号、多条梦境记录、AI 解析结果、示例元素、共享梦境和一条梦境宇宙故事。
 
-- 1 个体验账号
-- 多条梦境记录
-- AI 解析、故事、元素与样例图片
-- 审核通过的共享梦境
-- 1 条梦境宇宙样例故事
-
-体验账号：
-
-```text
-dreamer@dreamspirit.local
-dreamspirit123
-```
-
-### 5. 启动 Web 与 Worker
-
-开发时启动 Web：
+### 5. 启动服务
 
 ```bash
+# 终端 1：启动 Web 服务
 npm run dev
-```
 
-稳定运行时启动 Web：
-
-```bash
-npm run build
-npm run start
-```
-
-打开：
-
-```text
-http://localhost:3000
-```
-
-另开一个终端启动 Worker：
-
-```bash
+# 终端 2：启动异步任务 Worker
 npm run worker
 ```
 
-Worker 用于处理 AI 解析、故事生成、图片生成、共享审核、宇宙故事等异步任务。语音听写使用浏览器内置 Web Speech API，不依赖本项目 AI Key，也不需要 Worker。
+开发模式下 Next.js 支持热更新。生产环境建议先 `npm run build` 再 `npm run start`。
 
-## Windows 一键启动
+### Windows 一键启动
 
-Windows 用户可以双击：
+Windows 用户可以直接双击项目根目录的：
 
-```text
+```
 start-preview.bat
 ```
 
-使用前请先安装：
+脚本会引导你选择：
 
-- Node.js，需要包含 `npm`
-- Docker Desktop，或本机 PostgreSQL
+- **Quick Start**（日常使用）：复用已有数据库和构建结果，启动最快。
+- **Initialize / Repair**（首次运行 / 修复）：同步数据库、导入种子数据、重新构建。
+- 本机离线 / 局域网访问 / 隧道模式。
 
-脚本会提供：
+## 项目架构
 
-- `Quick start`：日常使用推荐，复用已有数据库和构建结果，启动更快。
-- `Initialize / repair`：首次运行、换电脑、删除数据库、更新代码或打不开时使用，会同步数据库、写入 seed 并重新构建。
+### 技术栈
 
-脚本还会让你选择：
+| 层 | 技术 |
+|---|---|
+| 运行时 | Node.js 18+ |
+| 前端框架 | Next.js 15 App Router |
+| UI 库 | React 19 + TypeScript 5.6 |
+| 编辑器 | TipTap 2.x 富文本 |
+| 图标 | lucide-react |
+| 样式 | CSS 自定义变量，深色玻璃拟态，响应式网格，打印样式 |
+| 认证 | Auth.js v5 Credentials + bcryptjs |
+| ORM | Prisma 5.17 |
+| 数据库 | PostgreSQL |
+| 校验 | zod |
+| AI 服务 | 统一服务端 Provider，默认兼容豆包（火山方舟）chat / image 接口 |
+| 异步任务 | 数据库驱动 Job Queue + Worker 轮询 |
+| 文件存储 | 本地文件（默认）/ S3 兼容 |
 
-- 本机离线：仅当前电脑访问。
-- 局域网 / 隧道：允许同一 Wi-Fi 或临时公网隧道访问运行项目的这台电脑。
+### 架构总览
+
+```mermaid
+graph TB
+    subgraph Browser["浏览器"]
+        UI["Next.js App Router<br/>React 19 + TypeScript"]
+        Voice["Web Speech API<br/>语音听写"]
+    end
+
+    subgraph NextJS["Next.js 服务端"]
+        API["API Routes<br/>auth / dreams / jobs / insights / community"]
+        Lib["Service Layer<br/>dreams / ai-config / insights / community / share-moderation"]
+        AI["AI Provider<br/>统一 LLM / Image 适配"]
+    end
+
+    subgraph Worker["Worker 进程"]
+        Poll["Job Queue Polling"]
+        Proc["Job Processors<br/>analyze / story / image / moderate / universe"]
+    end
+
+    subgraph Data["持久化层"]
+        PG["PostgreSQL<br/>Dream / Analysis / Element / Job / Story"]
+        FS["File Storage<br/>本地 / S3"]
+    end
+
+    UI --> API
+    Voice --> UI
+    API --> Lib
+    Lib --> AI
+    Lib --> PG
+    API -->|"创建 Job"| PG
+    Poll -->|"拉取 Job"| PG
+    Proc --> AI
+    Proc --> PG
+    Proc --> FS
+    UI -->|"轮询 GET /api/jobs/:id"| API
+```
+
+### 任务队列流程
+
+```mermaid
+sequenceDiagram
+    actor U as 用户
+    participant FE as 前端页面
+    participant API as /api/dreams/:id/analyze
+    participant DB as PostgreSQL
+    participant W as Worker
+    participant AI as AI Provider
+
+    U->>FE: 点击「解析梦境」
+    FE->>API: POST /api/dreams/:id/analyze
+    API->>DB: INSERT Job (status=QUEUED)
+    API-->>FE: { jobId, status: "queued" }
+
+    loop 轮询
+        FE->>API: GET /api/jobs/:id
+        API->>DB: SELECT Job status
+        API-->>FE: { status: "queued" | "running" }
+    end
+
+    W->>DB: SELECT QUEUED jobs
+    W->>DB: UPDATE Job (status=RUNNING)
+    W->>AI: chat/completions
+    AI-->>W: 象征解读 / 情绪 / 元素
+    W->>DB: INSERT DreamAnalysis + DreamElement
+    W->>DB: UPDATE Job (status=SUCCEEDED)
+
+    FE->>API: GET /api/jobs/:id
+    API->>DB: SELECT Job
+    API-->>FE: { status: "succeeded", output }
+    FE-->>U: 刷新展示解析结果
+```
+
+### 页面信息架构
+
+```mermaid
+graph LR
+    Start["/ 入口"] -->|"已登录"| App["/app 总览"]
+    Start -->|"未登录"| SignIn["/sign-in 登录"]
+    SignIn --> SignUp["/sign-up 注册"]
+
+    App --> New["/dreams/new<br/>新建梦境"]
+    App --> Detail["/dreams/[id]<br/>详情 / 编辑 / AI 动作"]
+    App --> Timeline["/timeline<br/>时间轴筛选"]
+    App --> Elements["/elements<br/>元素图谱"]
+    App --> Insights["/insights<br/>洞察报告"]
+    App --> Community["/community<br/>共享社区"]
+    App --> Settings["/settings<br/>设置中心"]
+    Detail --> Print["/exports/print<br/>打印报告"]
+```
+
+### 架构原则
+
+1. **前端不直连大模型。** 浏览器只请求本项目 API，不解密也不保存真实 API Key。
+2. **AI 调用走服务端任务队列。** 解析、故事、图片、共享审核、宇宙故事全部以 `Job` 入队，Worker 异步执行并持久化结果。
+3. **数据完全持久化。** 梦境、解析、故事、图片、元素、共享状态、审核记录和任务状态都保存在 PostgreSQL 中。
+4. **用户级 AI 配置。** 每个用户可以在设置页保存自己的 AI API Key 和模型配置，环境变量作为全局兜底。
+5. **本地优先。** 默认在本机运行，数据存放在本机数据库，不依赖任何云服务。
+
+### 目录结构
+
+```text
+app/              App Router 页面与 API 路由
+│  api/           REST API 端点（auth, dreams, jobs, insights, community, settings）
+│  sign-in/       登录页
+│  sign-up/       注册页
+│  start/         入口页
+components/       UI 组件（表单、图谱、语音听写、共享审核等）
+│  auth/          认证相关组件
+docs/             项目文档
+lib/              服务层
+│  ai/            AI Provider 实现
+│  jobs/          任务处理器
+│  ai-config.ts   AI 配置读写
+│  auth.ts        认证配置
+│  community.ts   社区与共享
+│  dreams.ts      梦境 CRUD
+│  insights.ts    洞察聚合
+│  prisma.ts      Prisma 客户端
+│  share-moderation.ts  共享审核与脱敏
+│  storage.ts     文件存储
+│  utils.ts       工具函数
+prisma/           Prisma Schema 与 Seed 数据
+public/           静态资源与品牌素材
+types/            TypeScript 类型扩展
+worker/           后台任务处理入口
+```
+
+### API 总览
+
+#### 账号
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` | `/api/auth/register` | 注册新账号 |
+| `DELETE` | `/api/account` | 注销账号 |
+| `GET` / `PUT` | `/api/settings/ai-config` | AI 配置读写 |
+| `GET` / `PUT` | `/api/settings/dream-preferences` | 情绪标签与主题规则 |
+
+#### 梦境
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` / `GET` | `/api/dreams` | 创建 / 列表 |
+| `GET` / `PATCH` / `DELETE` | `/api/dreams/:id` | 详情 / 更新 / 删除 |
+| `GET` | `/api/dreams/export` | 全量 Markdown 导出 |
+
+#### AI 任务（均返回 `{ jobId, status }`）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `POST` | `/api/dreams/:id/analyze` | 解析梦境 |
+| `POST` | `/api/dreams/:id/story` | 生成故事 |
+| `POST` | `/api/dreams/:id/image` | 生成图片 |
+| `POST` | `/api/dreams/:id/share` | 提交匿名共享 |
+| `POST` | `/api/dreams/:id/transcribe` | 转写（当前占位） |
+| `GET` | `/api/jobs/:id` | 查询任务状态 |
+
+#### 洞察 & 社区
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| `GET` | `/api/insights/summary` | 洞察报告数据 |
+| `GET` | `/api/community/dreams` | 公开共享池 |
+| `POST` | `/api/community/universe` | 生成梦境宇宙 |
+
+### API 总览
+
+| 类型 | 输入 | 输出 |
+|---|---|---|
+| `ANALYZE_DREAM` | 梦境标题、正文、情绪、清晰度 | 象征解读、情绪分析、压力源、主题、元素 |
+| `GENERATE_STORY` | 梦境全文 | 300-500 字短篇故事 |
+| `GENERATE_IMAGE` | AI prompt | 图片 URL 或 base64 |
+| `MODERATE_SHARE` | 梦境原文 | 脱敏文本 + 审核结果 |
+| `GENERATE_UNIVERSE` | 3-5 条公开梦境 | 1800-2500 字公共故事 |
+| `TRANSCRIBE` | 音频 | 当前为占位实现 |
+
+任务失败默认重试 3 次，超限后标记 `FAILED`。
 
 ## 使用模式
 
-### 本机离线模式
+| 模式 | 访问方式 | 适用场景 |
+|---|---|---|
+| **本机离线** | `http://localhost:3000` | 日常使用，数据仅在本机，无需网络 |
+| **局域网** | `http://<你的局域网IP>:3000` | 同一 Wi-Fi 下其他设备访问 |
+| **隧道** | 通过 Cloudflare Tunnel / ngrok 等工具 | 临时远程访问 |
 
-- 数据保存在运行者自己的本地 PostgreSQL / Docker volume。
-- 账号、梦境、时间轴、导出、浏览器语音听写、共享本地规则审核都可以本地使用。
-- AI 解析、故事生成、图片生成需要在设置页或 `.env.local` 配置 API Key。
+> 局域网模式下如无法访问，需在 Windows 防火墙中放行 Node.js 或端口 `3000`。
 
-### 局域网模式
+## 视觉系统
 
-同一 Wi-Fi 内其他设备访问运行项目的电脑：
+DreamSpirit 采用**深色梦境工作台**风格：
 
-```text
-http://你的局域网IP:3000
-```
+- 深蓝黑背景（`#08141d`）营造夜色和梦境氛围。
+- 橙色主强调（`#ff8c42`）用于主要按钮和关键行动。
+- 青色辅助强调（`#6dd3ce`）用于链接、图谱和导航。
+- 半透明深色表面、18px 模糊、柔和边框、大圆角。
+- 移动端自动切换单列布局，打印页有独立样式。
 
-如果其他设备打不开，通常需要在 Windows 防火墙中允许 Node.js 或端口 `3000`。
-
-手动启动局域网访问：
-
-```bash
-npm run build
-npm run start -- -H 0.0.0.0
-```
-
-### 隧道模式
-
-需要临时远程访问时，可以使用 Cloudflare Tunnel、ngrok 等隧道工具，把本机 `http://localhost:3000` 暴露成临时公网 HTTPS 链接。
-
-注意：
-
-- 电脑、项目和数据库必须保持运行。
-- 隧道访问的数据仍写入本机数据库。
-- 临时公网链接不要随意公开。
-
-## 核心 API
-
-### 账号与设置
-
-- `POST /api/auth/register`
-- `GET/PUT /api/settings/ai-config`
-- `GET/PUT /api/settings/dream-preferences`
-- `DELETE /api/account`
-
-### 梦境
-
-- `POST/GET /api/dreams`
-- `GET/PATCH/DELETE /api/dreams/:id`
-- `GET /api/dreams/export`
-
-### AI 与任务
-
-- `POST /api/dreams/:id/transcribe`
-- `POST /api/dreams/:id/analyze`
-- `POST /api/dreams/:id/story`
-- `POST /api/dreams/:id/image`
-- `POST /api/dreams/:id/share`
-- `GET /api/jobs/:id`
-
-AI、审核、生成类接口会返回异步任务：
-
-```json
-{
-  "jobId": "ckxxxx",
-  "status": "queued"
-}
-```
-
-### 社区与洞察
-
-- `GET /api/insights/summary`
-- `GET /api/community/dreams`
-- `POST /api/community/universe`
+详见 [功能与视觉系统文档](docs/功能与视觉系统文档.md)。
 
 ## 文档
 
-- `docs/项目说明文档.md`：面向提交和答辩的项目说明、评分点映射与演示脚本。
-- `docs/功能与视觉系统文档.md`：页面、功能流程、视觉系统与响应式说明。
-- `docs/AI-API-说明文档.md`：AI 配置、任务队列、Provider、接口与限制说明。
+| 文档 | 内容 |
+|---|---|
+| [项目说明文档](docs/项目说明文档.md) | 项目概述、评分点映射、数据流、创新点、演示建议 |
+| [功能与视觉系统文档](docs/功能与视觉系统文档.md) | 页面结构、功能流程、交互状态、色彩与布局系统 |
+| [AI API 说明文档](docs/AI-API-说明文档.md) | Provider 配置、任务队列、审核机制、API 汇总 |
 
-## 配图建议
+## 参与贡献
 
-后续完善提交材料时，建议补充以下截图或图片：
+```bash
+git clone https://github.com/Xavier-Trump/DreamSpirit.git
+cd DreamSpirit
+npm install
+npm run dev
+```
 
-- `【图片占位】` 首页 / 梦境总览截图。
-- `【图片占位】` 新建梦境页面，重点展示富文本编辑和语音听写。
-- `【图片占位】` 梦境详情页，重点展示 AI 解析、故事和图片生成结果。
-- `【图片占位】` 时间轴筛选截图。
-- `【图片占位】` 元素图谱截图。
-- `【图片占位】` 洞察报告截图。
-- `【图片占位】` 共享梦境社区与梦境宇宙截图。
-- `【图片占位】` 设置页 AI 配置与主题规则截图。
+欢迎提交 Issue 和 Pull Request。
 
-## 已验证
+## 开源许可
 
-- `npx prisma generate`
-- `npm run build`
+[MIT](LICENSE)
 
-## 后续可扩展
+---
 
-- 接入真实服务端 ASR，让录音文件也能在后台转写。
-- 为 AI 任务增加配额、限流与监控。
-- 增加更多 AI Provider 适配层。
-- 为共享审核加入人工复核后台或二次模型判定。
+DreamSpirit 是独立的第三方开源项目，与任何商业 AI 服务商无关。仅供个人学习、研究和自我探索使用。使用 AI 功能时，请遵守相应服务商的 API 使用条款。
