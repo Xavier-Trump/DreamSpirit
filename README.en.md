@@ -17,7 +17,9 @@
   <a href="README.md">中文</a> ·
   <a href="docs/功能与视觉系统文档.md">Features & UI</a> ·
   <a href="docs/AI-API-说明文档.md">AI Docs</a> ·
-  <a href="docs/项目说明文档.md">Project Overview</a>
+  <a href="docs/项目说明文档.md">Project Overview</a> ·
+  <a href="docs/DEPLOYMENT.md">Deployment</a> ·
+  <a href="docs/RELEASE.md">Release</a>
 </p>
 
 ---
@@ -159,6 +161,25 @@ npm run worker
 ```
 
 Dev mode supports hot reload. For production, run `npm run build` then `npm run start`.
+
+### Docker Production Deployment
+
+The repository includes a reusable Docker production baseline:
+
+```bash
+cp .env.production.example .env.production
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+Current public deployment:
+
+- Public URL: `https://dream.vectorcontrol.tech`
+- Path: Cloudflare -> hk1 nginx -> gz1 Tailnet `100.89.231.43:3001`
+
+See:
+
+- [Deployment Runbook](docs/DEPLOYMENT.md)
+- [Release Process](docs/RELEASE.md)
 
 ### Windows Quick Launch
 
