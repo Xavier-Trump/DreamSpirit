@@ -255,7 +255,7 @@ if "!NETWORK_MODE!"=="lan" (
   ) else (
     echo LAN URL could not be detected automatically.
   )
-  echo For temporary internet access, expose http://127.0.0.1:3000 with a tunnel tool such as Cloudflare Tunnel or ngrok.
+  echo For temporary internet access, expose http://127.0.0.1:3000 with a temporary tunnel tool.
 ) else (
   echo Mode: Local only. Other devices should not be able to connect unless you restart in LAN or tunnel mode.
 )

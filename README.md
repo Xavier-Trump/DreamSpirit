@@ -17,7 +17,9 @@
   <a href="README.en.md">English</a> ·
   <a href="docs/功能与视觉系统文档.md">功能文档</a> ·
   <a href="docs/AI-API-说明文档.md">AI 文档</a> ·
-  <a href="docs/项目说明文档.md">项目说明</a>
+  <a href="docs/项目说明文档.md">项目说明</a> ·
+  <a href="docs/DEPLOYMENT.md">部署</a> ·
+  <a href="docs/RELEASE.md">发布</a>
 </p>
 
 ---
@@ -159,6 +161,22 @@ npm run worker
 ```
 
 开发模式下 Next.js 支持热更新。生产环境建议先 `npm run build` 再 `npm run start`。
+
+### Docker 生产部署
+
+项目包含可复用的 Docker 生产基线：
+
+```bash
+cp .env.production.example .env.production
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+```
+
+生产部署时将 `AUTH_URL` 设置为你的公开 HTTPS 域名；反向代理、私网地址和访问控制策略应放在私有运维文档中，不写入公开仓库。
+
+详细操作、验证和发布规范见：
+
+- [部署 Runbook](docs/DEPLOYMENT.md)
+- [发布流程](docs/RELEASE.md)
 
 ### Windows 一键启动
 
@@ -379,7 +397,7 @@ worker/           后台任务处理入口
 |---|---|---|
 | **本机离线** | `http://localhost:3000` | 日常使用，数据仅在本机，无需网络 |
 | **局域网** | `http://<你的局域网IP>:3000` | 同一 Wi-Fi 下其他设备访问 |
-| **隧道** | 通过 Cloudflare Tunnel / ngrok 等工具 | 临时远程访问 |
+| **隧道** | 通过临时隧道工具 | 临时远程访问 |
 
 > 局域网模式下如无法访问，需在 Windows 防火墙中放行 Node.js 或端口 `3000`。
 

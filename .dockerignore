@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+data
+runtime
+tmp
+uploads
+.env
+.env.local
+.env.*.local
+*.log
